@@ -1,21 +1,36 @@
 
-from Scraper.amazon_scraper import scraper_amazon
-from Models.depot import Depot
-from Views.console_view import afficher_produits
-from Views.export_view import exporter_produits
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.common.exceptions import TimeoutException
+
+from config import AMAZON_URL
+from Scraper.drivers import creer_driver
+from Scraper.parsing import extraire_produits
 
 
-def lancer_scraping():
-    produits_recuperes = scraper_amazon()
+def scraper_amazon(url=AMAZON_URL):
+    driver = creer_driver()
 
-    depot = Depot()
-    depot.ajouter_tous(produits_recuperes)
+    try:
+        driver.get(url)
 
-    produits = depot.obtenir_tous()
+        attente = WebDriverWait(driver, 20)
 
-    afficher_produits(produits)
+        attente.until(
+            lambda navigateur: navigateur.find_elements(
+                By.CSS_SELECTOR,
+                'div[data-component-type="s-search-result"]'
+            )
+        )
 
-    if produits:
-        exporter_produits(produits)
+        html = driver.page_source
+        produits = extraire_produits(html)
 
-    return produits
+        return produits
+
+    except TimeoutException:
+        print("Aucun résultat détecté dans le délai imparti.")
+        return []
+
+    finally:
+        driver.quit()
