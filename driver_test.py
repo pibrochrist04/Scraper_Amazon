@@ -1,8 +1,16 @@
-from Scraper.amazon_scraper import AmazonScraper
+from Scraper.drivers import creer_driver, fermer_driver
 
-scraper = AmazonScraper()
-produits = scraper.rechercher_produits("clavier")
+driver = None
 
-print(f"\nProduits récupérés : {len(produits)}")
-for p in produits[:5]:
-    print(p)
+try:
+    driver = creer_driver()
+    driver.get("https://www.amazon.fr")
+
+    print("Titre de la page :", driver.title)
+    print("URL actuelle :", driver.current_url)
+
+except Exception as erreur:
+    print("Erreur :", erreur)
+
+finally:
+    fermer_driver(driver)
